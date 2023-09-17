@@ -2,6 +2,10 @@ import Image from "next/image";
 import { z } from "zod";
 import { FilterCategoryButton, SearchInput } from "@/app/category-filter";
 
+export const metadata = {
+	title: "Browse blog posts",
+};
+
 const apiResponseSchema = z.object({
 	posts: z.array(
 		z.object({
@@ -22,16 +26,38 @@ const apiResponseSchema = z.object({
 	),
 });
 
-const getBlogPosts = async () => {
-	const res = await fetch("http://localhost:3000/api");
+const mapParamsToArray = (params: string | string[] | undefined) => {
+	return typeof params === "object" ? params : typeof params === "string" ? [params] : [];
+};
+
+const getBlogPosts = async (searchParams: Record<string, string | string[] | undefined>) => {
+	const searchQuery = typeof searchParams?.search === "string" && searchParams.search;
+
+	const categoriesQueries = mapParamsToArray(searchParams?.category);
+
+	const params = new URLSearchParams();
+
+	if (searchQuery) {
+		params.append("search", searchQuery);
+	}
+
+	categoriesQueries.forEach((param) => params.append("category", param));
+
+	const paramsString = params.toString().length > 0 ? `?${params.toString()}` : "";
+
+	const res = await fetch(`http://localhost:3000/api${paramsString}`);
 
 	const data = (await res.json()) as unknown;
 
 	return apiResponseSchema.parse(data);
 };
 
-export default async function Home() {
-	const data = await getBlogPosts();
+interface Props {
+	searchParams: Record<string, string | string[] | undefined>;
+}
+
+export default async function Home({ searchParams }: Props) {
+	const data = await getBlogPosts(searchParams);
 
 	return (
 		<main className="flex min-h-screen flex-col bg-slate-200 p-6 md:p-12 lg:p-24">
@@ -62,7 +88,9 @@ export default async function Home() {
 
 							<div className="h-1/2 p-4">
 								<p className="mb-2 text-base font-medium text-blue-600">
-									{data.categories.find((c) => c.id === post.categories[0])?.name ?? "No category"}
+									{post.categories
+										.map((category) => data.categories.find((c) => c.id === category)?.name)
+										.join(", ")}
 								</p>
 								<h3 className="mb-2 font-semibold">{post.title}</h3>
 								<p className="text-xs">{post.excerpt}</p>
