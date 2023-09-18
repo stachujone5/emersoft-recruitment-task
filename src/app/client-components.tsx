@@ -5,11 +5,11 @@ import { useTransition } from "react";
 import { twMerge } from "tailwind-merge";
 import { BiSearchAlt2 } from "react-icons/bi";
 
-interface Props {
+interface FilterCategoryButtonProps {
 	children: string;
 }
 
-export const FilterCategoryButton = ({ children }: Props) => {
+export const FilterCategoryButton = ({ children }: FilterCategoryButtonProps) => {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -81,5 +81,67 @@ export const SearchInput = () => {
 				<BiSearchAlt2 className="text-gray mr-2 text-2xl" />
 			</div>
 		</>
+	);
+};
+
+interface PaginationProps {
+	currentPage: number;
+	totalPages: number;
+}
+
+export const Pagination = ({ currentPage, totalPages }: PaginationProps) => {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+	const [, startTransition] = useTransition();
+
+	const handlePreviousPage = () => {
+		if (currentPage === 1) return;
+
+		const params = new URLSearchParams(searchParams);
+
+		params.set("page", (currentPage - 1).toString());
+
+		startTransition(() => {
+			router.replace(`${pathname}?${params.toString()}`);
+		});
+	};
+
+	const handleNextPage = () => {
+		console.log(currentPage);
+		console.log(totalPages);
+		if (currentPage === totalPages) return;
+
+		const params = new URLSearchParams(searchParams);
+
+		params.set("page", (currentPage + 1).toString());
+
+		startTransition(() => {
+			router.replace(`${pathname}?${params.toString()}`);
+		});
+	};
+
+	return (
+		<div className="mt-4 flex flex-col items-center justify-center">
+			<p className="mb-1 text-center text-xs font-medium">
+				Page: {currentPage} of total {totalPages}
+			</p>
+			<div className="flex gap-2">
+				<button
+					onClick={handlePreviousPage}
+					disabled={currentPage === 1}
+					className="rounded-md bg-slate-50 px-4 py-2 shadow-sm transition-colors disabled:cursor-not-allowed"
+				>
+					prev
+				</button>
+				<button
+					onClick={handleNextPage}
+					disabled={currentPage === totalPages}
+					className="rounded-md bg-slate-50 px-4 py-2 shadow-sm transition-colors disabled:cursor-not-allowed"
+				>
+					next
+				</button>
+			</div>
+		</div>
 	);
 };

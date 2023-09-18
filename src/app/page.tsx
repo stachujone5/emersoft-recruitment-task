@@ -1,9 +1,9 @@
 import Image from "next/image";
 import { z } from "zod";
-import { FilterCategoryButton, SearchInput } from "@/app/category-filter";
+import { FilterCategoryButton, Pagination, SearchInput } from "@/app/client-components";
 
 export const metadata = {
-	title: "Browse blog posts",
+	title: "Blog",
 };
 
 const apiResponseSchema = z.object({
@@ -24,6 +24,10 @@ const apiResponseSchema = z.object({
 			slug: z.string(),
 		}),
 	),
+	pagination: z.object({
+		totalPages: z.number(),
+		currentPage: z.number(),
+	}),
 });
 
 const mapParamsToArray = (params: string | string[] | undefined) => {
@@ -32,6 +36,7 @@ const mapParamsToArray = (params: string | string[] | undefined) => {
 
 const getBlogPosts = async (searchParams: Record<string, string | string[] | undefined>) => {
 	const searchQuery = typeof searchParams?.search === "string" && searchParams.search;
+	const pageQuery = typeof searchParams?.page === "string" && searchParams.page;
 
 	const categoriesQueries = mapParamsToArray(searchParams?.category);
 
@@ -41,11 +46,15 @@ const getBlogPosts = async (searchParams: Record<string, string | string[] | und
 		params.append("search", searchQuery);
 	}
 
+	if (pageQuery) {
+		params.append("page", pageQuery);
+	}
+
 	categoriesQueries.forEach((param) => params.append("category", param));
 
 	const paramsString = params.toString().length > 0 ? `?${params.toString()}` : "";
 
-	const res = await fetch(`http://localhost:3000/api${paramsString}`);
+	const res = await fetch(`http://localhost:3000/api${paramsString}`, { cache: "no-store" });
 
 	const data = (await res.json()) as unknown;
 
@@ -60,7 +69,7 @@ export default async function Home({ searchParams }: Props) {
 	const data = await getBlogPosts(searchParams);
 
 	return (
-		<main className="flex min-h-screen flex-col bg-slate-200 p-6 md:p-12 lg:p-24">
+		<main className="flex min-h-screen max-w-[150rem]  flex-col p-6 md:p-12 lg:p-24">
 			<h1 className="mb-4 text-center text-3xl font-bold text-black">From the blog</h1>
 			<h2 className="font-base mb-5 text-center text-base text-slate-900">
 				Lorem ipsum dolor sit amet consectetur adipisicing elit. Suscipit tempore assumenda
@@ -74,30 +83,39 @@ export default async function Home({ searchParams }: Props) {
 				<SearchInput />
 			</div>
 			{data.posts.length > 0 ? (
-				<section className="grid flex-grow grid-cols-1 justify-center gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-					{data.posts.map((post) => (
-						<div className="h-96 overflow-hidden rounded-md bg-white shadow-md" key={post.id}>
-							<div className="relative h-1/2">
-								<Image
-									src={post.imageUrl}
-									className="object-cover"
-									fill
-									alt={`Thumbnail of post: ${post.title}`}
-								/>
-							</div>
+				<div>
+					<section className="grid flex-grow grid-cols-1 justify-center gap-4 md:grid-cols-2 xl:grid-cols-4">
+						{data.posts.map((post) => (
+							<div
+								className="h-96 overflow-hidden rounded-md bg-white shadow-md xl:h-[40rem]"
+								key={post.id}
+							>
+								<div className="relative h-1/2">
+									<Image
+										src={post.imageUrl}
+										className="object-cover"
+										fill
+										alt={`Thumbnail of post: ${post.title}`}
+									/>
+								</div>
 
-							<div className="h-1/2 p-4">
-								<p className="mb-2 text-base font-medium text-blue-600">
-									{post.categories
-										.map((category) => data.categories.find((c) => c.id === category)?.name)
-										.join(", ")}
-								</p>
-								<h3 className="mb-2 font-semibold">{post.title}</h3>
-								<p className="text-xs">{post.excerpt}</p>
+								<div className="h-1/2 p-4">
+									<p className="mb-2 font-medium text-blue-600 xl:text-xl">
+										{post.categories
+											.map((category) => data.categories.find((c) => c.id === category)?.name)
+											.join(", ")}
+									</p>
+									<h3 className="mb-2 font-semibold xl:text-xl">{post.title}</h3>
+									<p className="text-xs xl:text-xl">{post.excerpt}</p>
+								</div>
 							</div>
-						</div>
-					))}
-				</section>
+						))}
+					</section>
+					<Pagination
+						currentPage={data.pagination.currentPage}
+						totalPages={data.pagination.totalPages}
+					/>
+				</div>
 			) : (
 				<div className="flex flex-grow items-center justify-center">
 					<p className="text-4xl font-semibold">No posts found!</p>

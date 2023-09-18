@@ -4,9 +4,16 @@ import blogData from "../blog.json";
 export function GET(req: Request) {
 	const { searchParams } = new URL(req.url);
 	const searchQuery = searchParams.get("search") ?? "";
+	const pageQuery = searchParams.get("page") ?? "1";
 	const categoriesQueries = searchParams
 		.getAll("category")
 		.map((category) => category.toLowerCase());
+
+	const take = 4;
+
+	const pageNumber = Number.parseInt(pageQuery) || 1;
+	const startIndex = (pageNumber - 1) * take;
+	const endIndex = startIndex + take;
 
 	const postsFilteredByName = blogData.posts.filter((post) =>
 		post.title.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -22,9 +29,16 @@ export function GET(req: Request) {
 					}),
 			  );
 
+	const totalPages = Math.ceil(postsFilteredByCategories.length / take);
+	const paginatedPosts = postsFilteredByCategories.slice(startIndex, endIndex);
+
 	const filteredData = {
 		categories: blogData.categories,
-		posts: postsFilteredByCategories,
+		posts: paginatedPosts,
+		pagination: {
+			totalPages,
+			currentPage: pageNumber,
+		},
 	};
 
 	return NextResponse.json(filteredData);
