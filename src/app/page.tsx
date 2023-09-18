@@ -89,7 +89,7 @@ export default async function Home({ searchParams }: Props) {
 					<section className="grid flex-grow grid-cols-1 justify-center gap-4 md:grid-cols-2 xl:grid-cols-4">
 						{data.posts.map((post) => (
 							<div
-								className="h-96 overflow-hidden rounded-md bg-white shadow-md xl:h-[40rem]"
+								className="h-96 overflow-hidden rounded-md bg-white shadow-md xl:h-[35rem]"
 								key={post.id}
 							>
 								<div className="relative h-1/2">
@@ -108,7 +108,7 @@ export default async function Home({ searchParams }: Props) {
 											.join(", ")}
 									</p>
 									<h3 className="mb-2 font-semibold xl:text-xl">{post.title}</h3>
-									<p className="text-xs xl:text-xl">{post.excerpt}</p>
+									<p className="text-xs xl:text-base">{post.excerpt}</p>
 								</div>
 							</div>
 						))}
