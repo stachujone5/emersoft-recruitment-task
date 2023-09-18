@@ -19,6 +19,8 @@ export const FilterCategoryButton = ({ children }: FilterCategoryButtonProps) =>
 		const params = new URLSearchParams(searchParams);
 		const categoriesInParams = params.getAll("category");
 
+		params.set("page", "1");
+
 		if (categoriesInParams.includes(children)) {
 			params.delete("category");
 
