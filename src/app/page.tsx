@@ -54,7 +54,9 @@ const getBlogPosts = async (searchParams: Record<string, string | string[] | und
 
 	const paramsString = params.toString().length > 0 ? `?${params.toString()}` : "";
 
-	const res = await fetch(`http://localhost:3000/api${paramsString}`, { cache: "no-store" });
+	const apiUrl = z.string().url().parse(process.env.API_URL);
+
+	const res = await fetch(`${apiUrl}${paramsString}`, { cache: "no-store" });
 
 	const data = (await res.json()) as unknown;
 
